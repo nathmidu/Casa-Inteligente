@@ -1,112 +1,147 @@
 //bibliotecas
+
+#include <Servo.h>
 #include <LiquidCrystal_I2C.h>
 #include <DHT11.h>
 #include <DHT.h>
 #include <DHT_U.h>
 
-int PIR = 2;
-const int ledBranco = 13;
+//verificar vazamento de gas
 
-const int MQ135 = A0;
+const int mq135 = A0;
 const int buzzer = 12;
+//Sensor de movimento
+const int PIR = 2;
+const int LED = 13;
+
+
+//
+const int rele = 7;
 
 
 
 //
 #define DHTPINO A1
-#define DHTTIPO DHT11
+#define DHTTYPE DHT11
 
 DHT dht(DHTPINO, DHT11);
-LiquidCrystal_I2C lcd(0x27, 20, 4);
+LiquidCrystal_I2C Lcd(0x27, 20, 4);
 
+//
+Servo motor;  //vairavel do tipo servo para o motor
 
- void acenderLEDAoDetectarPresenca(){
-
+/*void acenderLEDaoDetectarPresenca(){
  int estadoPIR = digitalRead(PIR);
+if (estadoPIR == HIGH) {
+Serial.println("LED LIGADO");
+digitalWrite(LED, HIGH);
+} else {
+ Serial.println("LED DESLIGADO");
+ digitalWrite(LED, LOW);
 
-if (estadoPIR == HIGH){ 
-  digitalWrite(ledBranco, HIGH);
-  Serial.println("LED ligado");
-}
-
- else {
-  digitalWrite(ledBranco, LOW);
-  Serial.println("LED desligado");
-}
-Serial.println(estadoPIR);
-}
-
-void verificarVazamentoDeGas(){
-
-int estadoMQ135 = analogRead(MQ135);
-
-//Serial.println(estadoMQ135);
-if(estadoMQ135 >= 50){
-  alarme_dois_tons();
-
-}
-else{
-  noTone(buzzer);
-}
+}*/
+void verificarVazamentoDeGas() {
+  int estadoMQ135 = analogRead(mq135);
+  Serial.println(estadoMQ135);
+  if (estadoMQ135 >= 50) {
+    alarme_dois_tons();
+  } else {
+    noTone(buzzer);
+  }
 }
 
 void alarme_dois_tons() {
-
-
-  
   int freqAlta = 2000;
   int freqBaixa = 800;
   int duracaoTom = 250;
-
   tone(buzzer, freqAlta, duracaoTom);
   delay(duracaoTom);
   tone(buzzer, freqBaixa, duracaoTom);
   delay(duracaoTom);
 }
+
 void verificarTemperaturaEUmidade() {
-float temperatura = dht.readTemperature();
-float umidade = dht.readHumidity();
+  float temperatura = dht.readTemperature();
+  float umidade = dht.readHumidity();
+  Lcd.clear();  //Limpa o Lcd
+  Lcd.setCursor(0, 0);
+  Lcd.print("temperatura: " + String(temperatura) + "C");
+  Lcd.setCursor(0, 1);
+  Lcd.print("umidade: " + String(umidade) + "%");
 
-lcd.clear(); 
-lcd.setCursor(0, 0);
-lcd.print("Temperatura: " + String(temperatura) + "C");
-lcd.setCursor(0, 1);
-lcd.print("Umidade: " + String(umidade) + "%");
-
-//Serial.println("Temperatura: " + String(temperatura) + "C");
-//Serial.println("Umidade: " + String(umidade) + "%");
-delay(5000);
-
-  }
-void setup() {
-
- Serial.begin(9600);
-
-dht.begin();
-lcd.init();
-
-lcd.backlight();
-
- pinMode(ledBranco, OUTPUT);
- pinMode(PIR, INPUT);
-pinMode(buzzer, OUTPUT);
-pinMode(MQ135, INPUT);
-
-
-
- Serial.println("Sensores sendo calibrados, aguente firme!!!");
- delay(10000);
- Serial.println("Sensores calibrados! obrigada por esperar!!!");
-
-lcd.setCursor(0, 0);
-lcd.print("Senaizeiras");
-lcd.setCursor(0, 1);
-lcd.print("Obrigada!");
+  //Serial.println("temperatura: " + String(temperatura) + "C");
+  //Serial.println("umidade: " + String(umidade) + "%");
+  delay(5000);  //5 segundos
 }
 
+
+
+void abrirPortaAutomatica() {
+  motor.write(180);
+  delay(1500);
+}
+void fecharPortaAutomatica() {
+  motor.write(0);
+  delay(1500);
+}
+
+
+void trancarPorta(){
+digitalWrite(rele, HIGH);
+Serial.println("Porta trancada...")
+delay(1500);
+
+}
+
+void destrancarPorta(){
+  digitalWrite(rele, LOW);
+Serial.println("Porta destrancada...")
+}
+
+
+
+void setup() {
+  Serial.begin(9600);
+
+  dht.begin();  //inicializa o dht11
+  Lcd.init();   //inicia o LCD
+
+  Lcd.backlight();
+
+
+
+  pinMode(LED, OUTPUT);
+  pinMode(PIR, INPUT);
+  pinMode(buzzer, OUTPUT);
+  pinMode(mq135, INPUT);
+  motor.attach(3);
+  pinMode(rele, OUTPUT);
+
+//
+digitalWrite(rele, HIGH);
+
+
+  //
+  motor.write(0);  //por enquanto ser o angulo 0
+
+
+  Serial.println("Calibrando o sensor PIR...");
+  Serial.println("Por favor, nao se mova na frente do sensor.");
+  delay(15000);
+  Serial.println("Sensor PIR calibrado e pronto!");
+
+  Lcd.setCursor(0, 0);  //Primeira linha
+  Lcd.print("Iniciando leituras");
+  Lcd.setCursor(0, 1);  //Segunda linha
+  Lcd.print("Obrigada");
+}
+
+
 void loop() {
-  //acenderLEDAoDetectarPresenca();
+  //acenderLEDaoDetectarPresenca();
   //verificarVazamentoDeGas();
   //alarme_dois_tons();
-  verificarTemperaturaEUmidade();
- }
+  //verificarTemperaturaEUmidade();
+  abrirPortaAutomatica();
+  fecharPortaAutomatica();
+}
