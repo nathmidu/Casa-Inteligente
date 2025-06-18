@@ -1,0 +1,8 @@
+1 esp 32
+2 proto board
+2 motores 
+1 PIR 
+1 buser 
+clipes
+1 led
+1 registor 

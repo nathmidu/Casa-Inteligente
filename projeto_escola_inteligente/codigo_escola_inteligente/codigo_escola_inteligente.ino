@@ -87,15 +87,31 @@ void fecharPortaAutomatica() {
 
 
 void trancarPorta(){
-digitalWrite(rele, HIGH);
+ 
+digitalWrite(rele, LOW);
 Serial.println("Porta trancada...")
 delay(1500);
-
 }
 
 void destrancarPorta(){
-  digitalWrite(rele, LOW);
-Serial.println("Porta destrancada...")
+  String senhaDigitada;
+
+ Serial.println("por gentileza a senha para destravar a porta");
+ while (!Serial.available());
+ senhaDigitada = Serial.readString();
+
+ if(senhaDigitada == "Senai@134"){
+  digitalwrite(rele, HIGH);
+  Serial.println("Porta sendo destrancada...");
+  
+  abrirPortaComServo(); //Chamado a funcao que ira abrir a porta automatica er dermora 3s
+  trancarPorta(); //fecha a porta apos 3s 
+ }else{
+  if(motor.read() != 0){
+   fecharaPortaComServo();
+ }
+
+  Seial.println("Senha invalida! Na terceira tentativa vou chamar a swat, fica esperto(a)");
 }
 
 
@@ -118,7 +134,7 @@ void setup() {
   pinMode(rele, OUTPUT);
 
 //
-digitalWrite(rele, HIGH);
+digitalWrite(rele, LOW);
 
 
   //
